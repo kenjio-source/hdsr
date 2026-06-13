@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>長谷川式簡易知能評価スケール(HDS-R)採点補助</title>
+<!-- ホーム画面アプリ(PWA)設定 -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2a7d6f">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HDS-R">
+<style>
+  :root{
+    --main:#2a7d6f; --main-light:#e6f3f1; --accent:#f0a042;
+    --danger:#c0392b; --ok:#2a7d6f;
+    --bg:#f5f7f7; --card:#ffffff; --line:#dde4e3; --text:#22302e;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+       background:var(--bg); color:var(--text); font-size:16px;
+       padding-bottom:calc(96px + env(safe-area-inset-bottom));}
+  header{background:var(--main); color:#fff; padding:14px 16px 10px;
+         position:sticky; top:0; z-index:20;}
+  header h1{margin:0; font-size:17px; font-weight:700;}
+  header p{margin:2px 0 8px; font-size:11px; opacity:.85;}
+  .tabs{display:flex; gap:8px;}
+  .tab-btn{flex:1; padding:9px 0; border:none; border-radius:8px 8px 0 0;
+           background:rgba(255,255,255,.25); color:#fff; font-size:15px; font-weight:600;}
+  .tab-btn.active{background:var(--bg); color:var(--main);}
+  main{padding:12px; max-width:640px; margin:0 auto;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px;
+        padding:14px; margin-bottom:12px;}
+  .q-title{display:flex; align-items:baseline; gap:8px; margin-bottom:4px;}
+  .q-num{background:var(--main); color:#fff; font-weight:700; font-size:13px;
+         border-radius:6px; padding:2px 8px; flex-shrink:0;}
+  .q-text{font-weight:700; font-size:15px; line-height:1.45;}
+  .q-note{font-size:12px; color:#5f6f6d; margin:4px 0 10px; line-height:1.5;}
+  .row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;}
+  .row-label{font-size:14px; min-width:4.5em;}
+  .score-btn{min-width:64px; min-height:46px; padding:6px 14px; font-size:15px; font-weight:600;
+             border:2px solid var(--line); border-radius:10px; background:#fff; color:var(--text);}
+  .score-btn.sel{background:var(--main); border-color:var(--main); color:#fff;}
+  .score-btn:disabled{opacity:.35;}
+  .score-btn.wide{flex:1;}
+  input[type=text], input[type=number], input[type=date], textarea, select{
+    width:100%; padding:10px; font-size:16px; border:1.5px solid var(--line);
+    border-radius:8px; background:#fff;}
+  select, input[type=date]{min-height:46px;}
+  input[type=date]{-webkit-appearance:none; appearance:none;}
+  .ans-toggle{display:block; margin-top:10px; font-size:13px; font-weight:600; color:var(--main);
+              background:none; border:1px dashed var(--main); border-radius:8px;
+              padding:7px 12px; min-height:38px;}
+  .ans-box{margin-top:8px;}
+  .fac-card{border:1px solid var(--line); border-radius:10px; padding:10px; margin-top:10px;}
+  .fac-head{display:flex; align-items:center; gap:8px; font-weight:700; font-size:15px;}
+  .unit-chip{display:inline-flex; align-items:center; gap:4px; background:var(--main-light);
+             color:var(--main); border-radius:14px; padding:5px 10px; font-size:13px;
+             font-weight:600; margin:6px 6px 0 0;
+             touch-action:none; user-select:none; -webkit-user-select:none; cursor:grab;}
+  .unit-chip.dragging{opacity:.55; outline:2px dashed var(--main); cursor:grabbing;}
+  .unit-chip .grip{opacity:.5; font-size:11px; letter-spacing:-1px;}
+  .unit-chip button{border:none; background:none; color:var(--main); font-size:15px; padding:0 2px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  label.fld{display:block; font-size:12px; color:#5f6f6d; font-weight:600; margin-bottom:3px;}
+  /* 設問8 物品カード */
+  .items-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin:10px 0;}
+  .item-card{position:relative; border:2px solid var(--line); border-radius:12px; background:#fff;
+             padding:6px 2px 4px; text-align:center; cursor:pointer; user-select:none;}
+  .item-card.sel{border-color:var(--main); background:var(--main-light);}
+  .item-card .pic{height:52px; display:flex; align-items:center; justify-content:center;
+                  font-size:38px; overflow:hidden;}
+  .item-card .pic img{max-width:100%; max-height:52px; border-radius:6px; object-fit:cover;}
+  .item-card .nm{font-size:11px; font-weight:600; margin-top:2px;}
+  .item-card .chk{position:absolute; top:-7px; right:-5px; width:22px; height:22px;
+                  border-radius:50%; background:var(--main); color:#fff; font-size:13px;
+                  line-height:22px; display:none;}
+  .item-card.sel .chk{display:block;}
+  .cam-btn{font-size:11px; background:none; border:1px solid var(--line); border-radius:6px;
+           padding:2px 4px; margin-top:3px; color:#5f6f6d;}
+  .present-btn{width:100%; min-height:52px; font-size:16px; font-weight:700;
+               background:var(--accent); color:#fff; border:none; border-radius:12px;}
+  /* 設問9 野菜カウンター */
+  .veg-wrap{display:flex; align-items:center; gap:12px;}
+  .veg-count{font-size:34px; font-weight:800; min-width:2em; text-align:center; color:var(--main);}
+  .veg-plus{flex:1; min-height:64px; font-size:18px; font-weight:700; border:none;
+            border-radius:12px; background:var(--main); color:#fff;}
+  .veg-minus{min-width:64px; min-height:64px; font-size:22px; border:2px solid var(--line);
+             border-radius:12px; background:#fff;}
+  /* フッター(合計) */
+  .footer{position:fixed; left:0; right:0; bottom:0; z-index:30;
+          background:#fff; border-top:2px solid var(--line);
+          padding:10px 14px calc(10px + env(safe-area-inset-bottom));}
+  .footer-in{max-width:640px; margin:0 auto; display:flex; align-items:center; gap:12px;}
+  .total{font-size:15px; font-weight:600;}
+  .total b{font-size:30px; color:var(--main);}
+  .judge{font-size:13px; font-weight:700; padding:4px 10px; border-radius:8px;}
+  .judge.ok{background:var(--main-light); color:var(--ok);}
+  .judge.ng{background:#fdeceb; color:var(--danger);}
+  .save-btn{margin-left:auto; min-height:50px; padding:0 20px; font-size:16px; font-weight:700;
+            background:var(--main); color:#fff; border:none; border-radius:12px;}
+  /* 提示オーバーレイ */
+  #overlay{position:fixed; inset:0; background:#1c2826; z-index:100;
+           display:flex; flex-direction:column; align-items:center; justify-content:center;
+           color:#fff; text-align:center; padding:24px;}
+  #overlay .ov-pic{font-size:140px; line-height:1;}
+  #overlay .ov-pic img{max-width:80vw; max-height:50vh; border-radius:16px;}
+  #overlay .ov-name{font-size:40px; font-weight:800; margin:18px 0 6px;}
+  #overlay .ov-step{font-size:14px; opacity:.7;}
+  #overlay .ov-msg{font-size:24px; font-weight:700; line-height:1.7;}
+  #overlay button{margin-top:30px; min-height:56px; padding:0 34px; font-size:18px; font-weight:700;
+                  border:none; border-radius:14px; background:var(--accent); color:#fff;}
+  #overlay .ov-close{background:rgba(255,255,255,.2); margin-top:12px; min-height:44px; font-size:14px;}
+  /* 履歴 */
+  .rec{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);}
+  .rec:last-child{border-bottom:none;}
+  .rec .rec-main{flex:1; min-width:0;}
+  .rec .rec-id{font-weight:700; font-size:15px;}
+  .rec .rec-sub{font-size:12px; color:#5f6f6d;}
+  .rec .rec-score{font-size:22px; font-weight:800; color:var(--main);}
+  .rec .rec-score.low{color:var(--danger);}
+  .del-btn{border:1px solid var(--line); background:#fff; border-radius:8px;
+           min-width:44px; min-height:40px; font-size:14px; color:var(--danger);}
+  .big-btn{width:100%; min-height:52px; font-size:16px; font-weight:700; border:none;
+           border-radius:12px; background:var(--main); color:#fff; margin-bottom:10px;}
+  .big-btn.sub{background:#fff; color:var(--main); border:2px solid var(--main);}
+  .empty{text-align:center; color:#8a9997; padding:30px 0; font-size:14px;}
+  .disclaimer{font-size:11px; color:#8a9997; line-height:1.6; padding:4px 6px 20px;}
+  .reset-link{display:block; text-align:center; color:var(--danger); font-size:14px;
+              background:none; border:none; margin:4px auto 0; padding:10px;}
+  /* 記録詳細モーダル */
+  #detailModal{position:fixed; inset:0; background:rgba(20,35,32,.5); z-index:90;
+               display:flex; align-items:flex-end; justify-content:center;}
+  .dm-card{background:#fff; border-radius:16px 16px 0 0; width:100%; max-width:640px;
+           max-height:85vh; overflow-y:auto; padding:18px 16px calc(24px + env(safe-area-inset-bottom));}
+  .dm-head{font-size:19px; font-weight:800;}
+  .dm-sub{font-size:12px; color:#5f6f6d; margin:3px 0 10px; line-height:1.6;}
+  .dm-total{font-size:15px; font-weight:700; background:var(--main-light); color:var(--main);
+            border-radius:10px; padding:10px 12px; margin-bottom:6px;}
+  .dm-total.low{background:#fdeceb; color:var(--danger);}
+  .dm-q{border-top:1px solid var(--line); padding:9px 0;}
+  .dm-qt{display:flex; justify-content:space-between; gap:8px; font-size:14px; font-weight:600;}
+  .dm-qt .pt{flex-shrink:0; color:var(--main);}
+  .dm-ans{font-size:13px; color:#374a47; background:var(--main-light);
+          border-radius:8px; padding:7px 9px; margin-top:5px; line-height:1.55;}
+  .dm-close{width:100%; min-height:48px; margin-top:14px; font-size:16px; font-weight:700;
+            border:none; border-radius:12px; background:var(--main); color:#fff;}
+  .rec-chev{color:#aab8b6; font-size:20px; flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>長谷川式簡易知能評価スケール(HDS-R)</h1>
+  <p>採点補助ツール ― 診断は必ず医師が行ってください</p>
+  <div class="tabs">
+    <button class="tab-btn active" id="tabExam" onclick="showTab('exam')">検査</button>
+    <button class="tab-btn" id="tabHist" onclick="showTab('hist')">履歴・出力</button>
+    <button class="tab-btn" id="tabSet" onclick="showTab('set')">設定</button>
+  </div>
+</header>
+
+<!-- ========== 検査タブ ========== -->
+<main id="examView">
+
+  <div class="card">
+    <div class="grid2">
+      <div><label class="fld">施設</label>
+        <select id="selFacility"></select></div>
+      <div><label class="fld">フロア/ユニット</label>
+        <select id="selUnit"></select></div>
+      <div><label class="fld">利用者名</label>
+        <input type="text" id="userId" placeholder="例: 山田 花子"></div>
+      <div><label class="fld">年齢</label>
+        <input type="number" id="userAge" inputmode="numeric" placeholder="例: 84"></div>
+      <div><label class="fld">検査者</label>
+        <input type="text" id="examiner" placeholder="例: 大田"></div>
+      <div><label class="fld">検査日</label>
+        <input type="date" id="examDate"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="q-title"><span class="q-num">1</span>
+      <span class="q-text">お歳はいくつですか?</span></div>
+    <div class="q-note">2年までの誤差は正解</div>
+    <div class="row" data-group="q1"></div>
+  </div>
+
+  <div class="card">
+    <div class="q-title"><span class="q-num">2</span>
+      <span class="q-text">今日は何年の何月何日ですか? 何曜日ですか?</span></div>
+    <div class="q-note">年・月・日・曜日それぞれ正解で各1点</div>
+    <div class="row"><span class="row-label">年</span><span data-group="q2y" class="row" style="margin:0"></span></div>
+    <div class="row"><span class="row-label">月</span><span data-group="q2m" class="row" style="margin:0"></span></div>
+    <div class="row"><span class="row-label">日</span><span data-group="q2d" class="row" style="margin:0"></span></div>
+    <div class="row"><span class="row-label">曜日</span><span data-group="q2w" class="row" style="margin:0"></span></div>
+  </div>
+
+  <div class="card">
+    <div class="q-title"><span class="q-num">3</span>
+      <span class="q-text">私たちが今いるところはどこですか?</span></div>
+    <div class="q-note">自発的に答えられれば2点。5秒おいて「家ですか? 病院ですか? 施設ですか?」から正しく選べれば1点</div>
+    <div class="row" data-group="q3"></div>
+  </div>
+
+  <div class="card">
+    <div class="q-title"><span class="q-num">4</span>
+      <span class="q-text">これから言う3つの言葉を言ってみてください。あとでまた聞きますのでよく覚えておいてください。</span></div>
+    <div class="row" style="margin-bottom:10px">
+      <button class="score-btn wide" id="setA" onclick="setWordSet('A')">桜・猫・電車</button>
+      <button class="score-btn wide" id="setB" onclick="setWordSet('B')">梅・犬・自動車</button>
+    </div>
+    <div class="row"><span class="row-label" id="w1lbl"></span><span data-group="q4a" class="row" style="margin:0"></span></div>
+    <div class="row"><span class="row-label" id="w2lbl"></span><span data-group="q4b" class="row" style="margin:0"></span></div>
+    <div class="row"><span class="row-label" id="w3lbl"></span><span data-group="q4c" class="row" style="margin:0"></span></div>
+  </div>
+
+  <div class="card">
+    <div class="q-title"><span class="q-num">5</span>
+      <span class="q-text">100から7を順番に引いてください。</span></div>
+    <div class="q-note">「100引く7は?」(93)、正解ならさらに「それから7を引くと?」(86)。最初が不正解なら打ち切り(2問目は自動で0点)</div>
+    <div class="row"><span class="row-label">93</span><span data-group="q5a" class="row" style="margin:0"></span></div>
+    <div class="row"><span class="row-label">86</span><span data-group="q5b" class="row" style="margin:0"></span></div>
+  </div>
+
+  <div class="card">
+    <div class="q-title"><span class="q-num">6</span>
+      <span class="q-text">私がこれから言う数字を逆から言ってください。</span></div>
+    <div class="q-note">「6-8-2」→ 2-8-6、「3-5-2-9」→ 9-2-5-3。3桁が不正解なら打ち切り(4桁は自動で0点)</div>
+    <div class="row"><span class="row-label">2-8-6</span><span data-group="q6a" class="row" style="margin:0"></span></div>
+    <div class="row"><span class="row-label">9-2-5-3</span><span data-group="q6b" class="row" style="margin:0"></span></div>
+  </div>
+
+  <div class="card">
+    <div class="q-title"><span class="q-num">7</span>
+      <span class="q-text">先ほど覚えてもらった言葉をもう一度言ってみてください。</span></div>
+    <div class="q-note">自発的に答えられれば各2点。出ない場合はヒント(植物/動物/乗り物)を与え、正解なら各1点</div>
+    <div class="row"><span class="row-label" id="w1lbl2"></span><span data-group="q7a" class="row" style="margin:0"></span></div>
+    <div class="row"><span class="row-label" id="w2lbl2"></span><span data-group="q7b" class="row" style="margin:0"></span></div>
+    <div class="row"><span class="row-label" id="w3lbl2"></span><span data-group="q7c" class="row" style="margin:0"></span></div>
+  </div>
+
+  <div class="card">
+    <div class="q-title"><span class="q-num">8</span>
+      <span class="q-text">これから5つの品物を見せます。それを隠しますので、何があったか言ってください。</span></div>
+    <div class="q-note">下のボタンで品物を1つずつ画面に大きく提示できます。提示後は画面を伏せて答えてもらい、答えられた品物をタップしてください(各1点)。📷ボタンで実物の写真に差し替えられます。</div>
+    <button class="present-btn" onclick="startPresent()">▶ 品物を画面で提示する</button>
+    <div class="items-grid" id="itemsGrid"></div>
+  </div>
+
+  <div class="card">
+    <div class="q-title"><span class="q-num">9</span>
+      <span class="q-text">知っている野菜の名前をできるだけ多く言ってください。</span></div>
+    <div class="q-note">言えるたびに「+1」をタップ。途中で約10秒つまったら打ち切り。5個以下=0点、6個=1点 … 10個以上=5点</div>
+    <div class="veg-wrap">
+      <button class="veg-minus" onclick="vegChange(-1)">−</button>
+      <div class="veg-count" id="vegCount">0</div>
+      <button class="veg-plus" onclick="vegChange(1)">+1 言えた</button>
+    </div>
+    <div class="q-note" style="margin-top:8px">この設問の得点: <b id="vegScore">0</b> 点</div>
+  </div>
+
+  <div class="card">
+    <label class="fld">メモ(様子・特記事項など)</label>
+    <textarea id="memo" rows="2" placeholder="任意"></textarea>
+  </div>
+
+  <button class="reset-link" onclick="resetForm(true)">入力内容をすべてクリア</button>
+
+  <p class="disclaimer">
+    本ツールはHDS-Rの採点を補助するものであり、認知症の診断を行うものではありません。
+    結果の解釈・診断は医師の判断によります。データはこの端末のブラウザ内にのみ保存されます。
+    利用者名を含む記録・CSVは個人情報として、事業所の取り扱いルールに沿って管理してください。
+  </p>
+</main>
+
+<!-- ========== 履歴タブ ========== -->
+<main id="histView" style="display:none">
+  <div class="card">
+    <div class="q-text" style="margin-bottom:6px">絞り込み</div>
+    <div class="q-note">施設・フロア/ユニット・年月(測定期)で絞り込めます。下のCSV出力も絞り込んだ記録だけが対象になります。</div>
+    <div class="grid2">
+      <div><label class="fld">施設</label><select id="fltFac"></select></div>
+      <div><label class="fld">フロア/ユニット</label><select id="fltUnit"></select></div>
+      <div><label class="fld">年月(測定期)</label><select id="fltYm"></select></div>
+      <div style="display:flex; align-items:flex-end">
+        <button class="score-btn wide" onclick="clearFilters()">絞り込み解除</button></div>
+    </div>
+  </div>
+  <div class="card" id="exportCard"></div>
+  <div class="card">
+    <div class="q-text" style="margin-bottom:6px">保存済みの記録 <span id="recCount"></span></div>
+    <div class="q-note">記録をタップすると、設問ごとの点数と実際の回答を確認できます。</div>
+    <div id="recList"></div>
+  </div>
+</main>
+
+<!-- ========== 設定タブ ========== -->
+<main id="setView" style="display:none">
+  <div class="card" id="setLock" style="display:none">
+    <div class="q-text" style="margin-bottom:4px">🔒 設定はロックされています</div>
+    <div class="q-note">施設・ユニットの編集と暗証番号の変更は、管理者用の暗証番号を知っている職員のみ行えます。</div>
+    <button class="big-btn sub" onclick="enterAdminMode()">🔒 管理者モードに入る</button>
+  </div>
+ <div id="setBody">
+  <div class="card">
+    <div class="q-text" style="margin-bottom:4px">施設・フロア/ユニットの登録</div>
+    <div class="q-note">ここで登録した施設とフロア/ユニットが、検査画面のプルダウンに表示されます。記録・CSVにも反映されます。フロア/ユニットはドラッグ&ドロップで並び替えでき、その順番でプルダウンに表示されます。</div>
+    <div class="row">
+      <input type="text" id="newFacility" placeholder="施設名(例: ○○苑)" style="flex:1; width:auto">
+      <button class="score-btn" onclick="addFacility()">追加</button>
+    </div>
+    <div id="facilityList"></div>
+  </div>
+  <div class="card">
+    <div class="q-text" style="margin-bottom:4px">ダウンロード権限(管理者用暗証番号)</div>
+    <div class="q-note">暗証番号を設定すると、履歴タブのExcelダウンロードは「管理者モード」に入った職員だけが行えるようになります。番号は他の職員に共有しないでください。</div>
+    <div id="pinArea"></div>
+  </div>
+  <div class="card">
+    <div class="q-text" style="margin-bottom:4px">Googleスプレッドシート連携(自動保存)</div>
+    <div class="q-note">設定すると、検査を保存するたびにスプレッドシートへ自動で1行追加されます。連携しなくてもアプリは従来どおり使えます(端末内に保存)。設定手順は管理者にお問い合わせください。</div>
+    <div id="gasArea"></div>
+  </div>
+  <p class="disclaimer">設定はこの端末のブラウザ内に保存されます。端末ごとに設定が必要です。</p>
+ </div>
+</main>
+
+<!-- ========== 合計フッター ========== -->
+<div class="footer">
+  <div class="footer-in">
+    <div class="total">合計 <b id="totalScore">0</b> /30</div>
+    <div class="judge ok" id="judgeBox">―</div>
+    <button class="save-btn" onclick="saveRecord()">保存</button>
+  </div>
+</div>
+
+<!-- ========== 物品提示オーバーレイ ========== -->
+<div id="overlay" style="display:none"></div>
+
+<!-- ========== 記録詳細モーダル ========== -->
+<div id="detailModal" style="display:none"></div>
+
+<input type="file" id="photoInput" accept="image/*" style="display:none">
+
+<script>
+'use strict';
+
+/* ===== 設問・物品定義 ===== */
+const ITEMS = [
+  {key:'i1', name:'時計',   emoji:'⌚'},
+  {key:'i2', name:'鍵',     emoji:'🔑'},
+  {key:'i3', name:'ペン',   emoji:'🖊️'},
+  {key:'i4', name:'硬貨',   emoji:'🪙'},
+  {key:'i5', name:'はさみ', emoji:'✂️'},
+];
+const WORD_SETS = {
+  A:['桜','猫','電車'],
+  B:['梅','犬','自動車'],
+};
+
+/* ===== 状態 ===== */
+let state = {};       // 各設問の得点(未回答は undefined)
+let wordSet = 'A';
+let vegCount = 0;
+let photos = {};      // 物品キー → dataURL
+
+/* ===== 初期化 ===== */
+function init(){
+  try{ photos = JSON.parse(localStorage.getItem('hdsr_photos')||'{}'); }catch(e){ photos={}; }
+  document.getElementById('examDate').value = todayISO();
+
+  // 0/1ボタン群
+  ['q1','q2y','q2m','q2d','q2w','q4a','q4b','q4c','q5a','q5b','q6a','q6b'].forEach(g=>{
+    buildButtons(g,[['0',0],['1',1]]);
+  });
+  buildButtons('q3',[['0',0],['1',1],['2',2]]);
+  ['q7a','q7b','q7c'].forEach(g=>{
+    buildButtons(g,[['0',0],['ヒント 1',1],['自発 2',2]]);
+  });
+
+  setWordSet('A');
+  buildAnswerBoxes();
+  renderItems();
+  renderLocSelects();
+  document.getElementById('selFacility').addEventListener('change', ()=>{ fillUnits(); saveLastLoc(); });
+  document.getElementById('selUnit').addEventListener('change', saveLastLoc);
+  document.getElementById('fltFac').addEventListener('change', ()=>{
+    document.getElementById('fltUnit').value=''; renderHistory();
+  });
+  document.getElementById('fltUnit').addEventListener('change', renderHistory);
+  document.getElementById('fltYm').addEventListener('change', renderHistory);
+  document.getElementById('detailModal').addEventListener('click', (e)=>{
+    if(e.target.id === 'detailModal') closeDetail();
+  });
+  recalc();
+  renderHistory();
+  if(loadGas().url) flushQueue();   // 起動時: 未送信があれば再送を試みる
+}
+
+/* ===== 回答記録欄(全設問・折りたたみ) ===== */
+const ANS_KEYS = ['a1','a2','a3','a4','a5','a6','a7','a8','a9'];
+function buildAnswerBoxes(){
+  const cards = [...document.querySelectorAll('#examView .card')].filter(c=>c.querySelector('.q-num'));
+  cards.forEach((card,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'ans-toggle';
+    btn.textContent = '✎ 実際の回答を記録';
+    const ta = document.createElement('textarea');
+    ta.id = ANS_KEYS[i]; ta.className = 'ans-box'; ta.rows = 2;
+    ta.placeholder = '実際の答え方(例: 日にちが3日ずれて回答、ヒントで想起 など)';
+    ta.style.display = 'none';
+    btn.onclick = ()=>{
+      const show = ta.style.display === 'none';
+      ta.style.display = show ? '' : 'none';
+      if(show) ta.focus();
+    };
+    card.appendChild(btn);
+    card.appendChild(ta);
+  });
+}
+
+/* ===== 施設・ユニット設定 ===== */
+function loadSettings(){
+  try{
+    const s = JSON.parse(localStorage.getItem('hdsr_settings')||'{"facilities":[]}');
+    return (s && Array.isArray(s.facilities)) ? s : {facilities:[]};
+  }catch(e){ return {facilities:[]}; }
+}
+function saveSettings(s){ localStorage.setItem('hdsr_settings', JSON.stringify(s)); }
+
+function addFacility(){
+  const inp = document.getElementById('newFacility');
+  const name = inp.value.trim();
+  if(!name) return;
+  const s = loadSettings();
+  if(s.facilities.some(f=>f.name===name)){ alert('同じ名前の施設が登録済みです。'); return; }
+  s.facilities.push({name:name, units:[]});
+  saveSettings(s); inp.value = '';
+  renderSettings(); renderLocSelects();
+}
+
+function renderSettings(){
+  const s = loadSettings();
+  const list = document.getElementById('facilityList');
+  list.innerHTML = '';
+  if(s.facilities.length===0){
+    list.innerHTML = '<div class="empty">まだ施設が登録されていません。<br>上の欄に施設名を入れて「追加」を押してください。</div>';
+    return;
+  }
+  s.facilities.forEach((f,i)=>{
+    const card = document.createElement('div'); card.className = 'fac-card';
+    const head = document.createElement('div'); head.className = 'fac-head';
+    const nm = document.createElement('span'); nm.textContent = f.name; nm.style.flex = '1';
+    const del = document.createElement('button'); del.className = 'del-btn'; del.textContent = '削除';
+    del.onclick = ()=>{
+      if(!confirm('施設「'+f.name+'」を削除しますか?(過去の記録は消えません)')) return;
+      s.facilities.splice(i,1); saveSettings(s); renderSettings(); renderLocSelects();
+    };
+    head.appendChild(nm); head.appendChild(del); card.appendChild(head);
+    const units = document.createElement('div');
+    f.units.forEach((u,j)=>{
+      const chip = document.createElement('span'); chip.className = 'unit-chip';
+      chip.dataset.name = u;
+      const grip = document.createElement('span'); grip.className = 'grip'; grip.textContent = '⠿';
+      chip.appendChild(grip);
+      chip.appendChild(document.createTextNode(u));
+      const x = document.createElement('button'); x.textContent = '✕';
+      x.onclick = ()=>{ f.units.splice(j,1); saveSettings(s); renderSettings(); renderLocSelects(); };
+      chip.appendChild(x); units.appendChild(chip);
+      enableChipDrag(chip, f, s);
+    });
+    card.appendChild(units);
+    const row = document.createElement('div'); row.className = 'row'; row.style.marginTop = '10px';
+    const inp = document.createElement('input'); inp.type = 'text';
+    inp.placeholder = 'フロア/ユニット名(例: 2階東)'; inp.style.flex = '1'; inp.style.width = 'auto';
+    const add = document.createElement('button'); add.className = 'score-btn'; add.textContent = '追加';
+    add.onclick = ()=>{
+      const v = inp.value.trim(); if(!v) return;
+      if(f.units.includes(v)){ alert('同じ名前のフロア/ユニットが登録済みです。'); return; }
+      f.units.push(v); saveSettings(s); renderSettings(); renderLocSelects();
+    };
+    row.appendChild(inp); row.appendChild(add); card.appendChild(row);
+    list.appendChild(card);
+  });
+}
+
+/* ユニットチップのドラッグ&ドロップ並び替え(タッチ・マウス両対応) */
+function enableChipDrag(chip, facility, settings){
+  chip.addEventListener('pointerdown', (e)=>{
+    if(e.target.tagName === 'BUTTON') return; // ✕ボタンは削除操作
+    const parent = chip.parentNode;
+    const startX = e.clientX, startY = e.clientY;
+    let dragging = false;
+    const move = (ev)=>{
+      if(!dragging){
+        if(Math.hypot(ev.clientX-startX, ev.clientY-startY) < 8) return;
+        dragging = true;
+        try{ chip.setPointerCapture(e.pointerId); }catch(err){}
+        chip.classList.add('dragging');
+      }
+      ev.preventDefault();
+      // 指の真下にあるチップを調べて、その手前/後ろに差し込む
+      chip.style.visibility = 'hidden';
+      const under = document.elementFromPoint(ev.clientX, ev.clientY);
+      chip.style.visibility = '';
+      const over = under && under.closest ? under.closest('.unit-chip') : null;
+      if(over && over !== chip && over.parentNode === parent){
+        const r = over.getBoundingClientRect();
+        parent.insertBefore(chip, (ev.clientX < r.left + r.width/2) ? over : over.nextSibling);
+      }
+    };
+    const up = ()=>{
+      chip.removeEventListener('pointermove', move);
+      chip.removeEventListener('pointerup', up);
+      chip.removeEventListener('pointercancel', up);
+      if(!dragging) return;
+      chip.classList.remove('dragging');
+      facility.units = [...parent.querySelectorAll('.unit-chip')].map(c=>c.dataset.name);
+      saveSettings(settings);
+      renderSettings(); renderLocSelects();
+    };
+    chip.addEventListener('pointermove', move);
+    chip.addEventListener('pointerup', up);
+    chip.addEventListener('pointercancel', up);
+  });
+}
+
+function renderLocSelects(){
+  const s = loadSettings();
+  const fSel = document.getElementById('selFacility');
+  const uSel = document.getElementById('selUnit');
+  let last = {};
+  try{ last = JSON.parse(localStorage.getItem('hdsr_lastloc')||'{}'); }catch(e){}
+  fSel.innerHTML = '';
+  fSel.appendChild(new Option(s.facilities.length ? '選択してください' : '(設定タブで登録)', ''));
+  s.facilities.forEach(f=>fSel.appendChild(new Option(f.name, f.name)));
+  if(s.facilities.length===1) fSel.value = s.facilities[0].name;
+  else if(last.f && s.facilities.some(f=>f.name===last.f)) fSel.value = last.f;
+  fillUnits();
+  if(last.u && [...uSel.options].some(o=>o.value===last.u)) uSel.value = last.u;
+}
+function fillUnits(){
+  const s = loadSettings();
+  const fSel = document.getElementById('selFacility');
+  const uSel = document.getElementById('selUnit');
+  uSel.innerHTML = '';
+  uSel.appendChild(new Option('選択してください', ''));
+  const f = s.facilities.find(x=>x.name===fSel.value);
+  (f ? f.units : []).forEach(u=>uSel.appendChild(new Option(u, u)));
+  if(f && f.units.length===1) uSel.value = f.units[0];
+}
+function saveLastLoc(){
+  localStorage.setItem('hdsr_lastloc', JSON.stringify({
+    f: document.getElementById('selFacility').value,
+    u: document.getElementById('selUnit').value
+  }));
+}
+
+function buildButtons(group, defs){
+  const wrap = document.querySelector('[data-group="'+group+'"]');
+  defs.forEach(([label,val])=>{
+    const b = document.createElement('button');
+    b.className = 'score-btn';
+    b.textContent = label + '点';
+    b.onclick = ()=>selectScore(group, val);
+    b.dataset.v = val;
+    wrap.appendChild(b);
+  });
+}
+
+function selectScore(group, val){
+  // 同じボタン再タップで解除(未回答に戻す)
+  state[group] = (state[group]===val) ? undefined : val;
+
+  // 打ち切りルール: 5-1, 6-1 が不正解(0)なら2問目を0で固定
+  if(group==='q5a'){ applyCutoff('q5a','q5b'); }
+  if(group==='q6a'){ applyCutoff('q6a','q6b'); }
+  updateButtons();
+  recalc();
+}
+
+function applyCutoff(first, second){
+  const wrap = document.querySelector('[data-group="'+second+'"]');
+  const blocked = (state[first]===0);
+  wrap.querySelectorAll('button').forEach(b=>{ b.disabled = blocked; });
+  if(blocked) state[second] = 0;
+}
+
+function updateButtons(){
+  document.querySelectorAll('[data-group]').forEach(wrap=>{
+    const g = wrap.dataset.group;
+    wrap.querySelectorAll('button').forEach(b=>{
+      b.classList.toggle('sel', state[g]!==undefined && Number(b.dataset.v)===state[g]);
+    });
+  });
+}
+
+/* ===== 設問4/7 単語セット ===== */
+function setWordSet(s){
+  wordSet = s;
+  document.getElementById('setA').classList.toggle('sel', s==='A');
+  document.getElementById('setB').classList.toggle('sel', s==='B');
+  const w = WORD_SETS[s];
+  const hints = ['(植物)','(動物)','(乗り物)'];
+  ['w1lbl','w2lbl','w3lbl'].forEach((id,i)=>document.getElementById(id).textContent = w[i]);
+  ['w1lbl2','w2lbl2','w3lbl2'].forEach((id,i)=>document.getElementById(id).textContent = w[i]+hints[i]);
+}
+
+/* ===== 設問8 物品 ===== */
+function renderItems(){
+  const grid = document.getElementById('itemsGrid');
+  grid.innerHTML = '';
+  ITEMS.forEach(it=>{
+    const card = document.createElement('div');
+    card.className = 'item-card' + (state[it.key]===1 ? ' sel':'');
+    const pic = photos[it.key]
+      ? '<img src="'+photos[it.key]+'" alt="'+it.name+'">'
+      : it.emoji;
+    card.innerHTML = '<div class="chk">✓</div><div class="pic">'+pic+'</div>'+
+                     '<div class="nm">'+it.name+'</div>';
+    card.onclick = ()=>{ state[it.key] = (state[it.key]===1)?0:1; renderItems(); recalc(); };
+    const cam = document.createElement('button');
+    cam.className = 'cam-btn'; cam.textContent = '📷';
+    cam.onclick = (e)=>{ e.stopPropagation(); pickPhoto(it.key); };
+    card.appendChild(cam);
+    grid.appendChild(card);
+  });
+}
+
+let photoTarget = null;
+function pickPhoto(key){
+  photoTarget = key;
+  document.getElementById('photoInput').click();
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('photoInput').addEventListener('change', function(){
+    const f = this.files[0]; this.value='';
+    if(!f || !photoTarget) return;
+    const img = new Image();
+    img.onload = ()=>{
+      const max = 400;
+      const sc = Math.min(1, max/Math.max(img.width,img.height));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.width*sc); cv.height = Math.round(img.height*sc);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      photos[photoTarget] = cv.toDataURL('image/jpeg',0.8);
+      try{ localStorage.setItem('hdsr_photos', JSON.stringify(photos)); }
+      catch(e){ alert('写真の保存容量が足りません。'); delete photos[photoTarget]; }
+      renderItems();
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(f);
+  });
+});
+
+/* ===== 物品提示オーバーレイ ===== */
+let presentIdx = 0;
+function startPresent(){ presentIdx = 0; showPresent(); }
+function showPresent(){
+  const ov = document.getElementById('overlay');
+  ov.style.display = 'flex';
+  if(presentIdx < ITEMS.length){
+    const it = ITEMS[presentIdx];
+    const pic = photos[it.key] ? '<img src="'+photos[it.key]+'">' : it.emoji;
+    ov.innerHTML =
+      '<div class="ov-step">'+(presentIdx+1)+' / '+ITEMS.length+'</div>'+
+      '<div class="ov-pic">'+pic+'</div>'+
+      '<div class="ov-name">'+it.name+'</div>'+
+      '<button onclick="presentIdx++;showPresent()">次へ ▶</button>'+
+      '<button class="ov-close" onclick="closePresent()">中止</button>';
+  }else{
+    ov.innerHTML =
+      '<div class="ov-msg">品物を隠しました。<br><br>「ここに何がありましたか?」<br>と聞いてください。</div>'+
+      '<button onclick="closePresent()">採点画面へ戻る</button>';
+  }
+}
+function closePresent(){ document.getElementById('overlay').style.display = 'none'; }
+
+/* ===== 設問9 野菜カウンター ===== */
+function vegChange(d){
+  vegCount = Math.max(0, vegCount + d);
+  document.getElementById('vegCount').textContent = vegCount;
+  document.getElementById('vegScore').textContent = vegScore();
+  recalc();
+}
+function vegScore(){ return Math.max(0, Math.min(5, vegCount - 5)); }
+
+/* ===== 集計 ===== */
+const GROUPS = {
+  q1:['q1'], q2:['q2y','q2m','q2d','q2w'], q3:['q3'],
+  q4:['q4a','q4b','q4c'], q5:['q5a','q5b'], q6:['q6a','q6b'],
+  q7:['q7a','q7b','q7c'], q8:ITEMS.map(i=>i.key),
+};
+function subScore(q){
+  return GROUPS[q].reduce((s,g)=> s + (state[g]||0), 0);
+}
+function totalScore(){
+  return Object.keys(GROUPS).reduce((s,q)=> s + subScore(q), 0) + vegScore();
+}
+function recalc(){
+  const t = totalScore();
+  document.getElementById('totalScore').textContent = t;
+  const j = document.getElementById('judgeBox');
+  const touched = Object.values(state).some(v=>v!==undefined) || vegCount>0;
+  if(!touched){ j.textContent = '未入力'; j.className = 'judge ok'; }
+  else if(t <= 20){ j.textContent = '20点以下: 認知症の疑い'; j.className = 'judge ng'; }
+  else{ j.textContent = '21点以上: 非認知症域'; j.className = 'judge ok'; }
+}
+
+/* ===== 保存・履歴 ===== */
+function loadRecords(){
+  try{ return JSON.parse(localStorage.getItem('hdsr_records')||'[]'); }
+  catch(e){ return []; }
+}
+function saveRecords(recs){
+  localStorage.setItem('hdsr_records', JSON.stringify(recs));
+}
+
+async function saveRecord(){
+  const unanswered = ['q1','q2y','q2m','q2d','q2w','q3','q4a','q4b','q4c',
+                      'q5a','q5b','q6a','q6b','q7a','q7b','q7c']
+                     .filter(g=>state[g]===undefined).length;
+  if(unanswered > 0 &&
+     !confirm('未入力の項目が '+unanswered+' 箇所あります(0点として保存されます)。保存しますか?')) return;
+  const fac = document.getElementById('selFacility').value;
+  if(loadSettings().facilities.length > 0 && !fac &&
+     !confirm('施設が未選択です。このまま保存しますか?')) return;
+
+  const t = totalScore();
+  const rec = {
+    uid: genUid(),
+    date: examDateStr(),
+    facility: fac,
+    unit: document.getElementById('selUnit').value,
+    id: document.getElementById('userId').value.trim(),
+    age: document.getElementById('userAge').value.trim(),
+    examiner: document.getElementById('examiner').value.trim(),
+    q1:subScore('q1'), q2:subScore('q2'), q3:subScore('q3'),
+    q4:subScore('q4'), q5:subScore('q5'), q6:subScore('q6'),
+    q7:subScore('q7'), q8:subScore('q8'), q9:vegScore(),
+    veg:vegCount, words:wordSet,
+    answers: ANS_KEYS.map(k=>document.getElementById(k).value.trim()),
+    total:t,
+    judge: t<=20 ? '認知症の疑い(20点以下)' : '非認知症域(21点以上)',
+    memo: document.getElementById('memo').value.trim(),
+  };
+  const recs = loadRecords();
+  recs.unshift(rec);
+  saveRecords(recs);
+  enqueueSync(rec);
+  renderHistory();
+  let msg = '保存しました(合計 '+t+' 点)。';
+  if(loadGas().url){
+    const r = await flushQueue();
+    msg += (r.remaining>0)
+      ? '\n⚠ スプレッドシート未送信 '+r.remaining+'件(オンライン時に自動再送されます)。'
+      : '\nスプレッドシートにも追加しました。';
+  }
+  alert(msg);
+  resetForm(false);
+}
+function genUid(){ return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8); }
+
+function resetForm(ask){
+  if(ask && !confirm('入力内容をすべてクリアしますか?')) return;
+  state = {}; vegCount = 0;
+  document.getElementById('vegCount').textContent = 0;
+  document.getElementById('vegScore').textContent = 0;
+  document.getElementById('userId').value = '';
+  document.getElementById('userAge').value = '';
+  document.getElementById('memo').value = '';
+  document.getElementById('examDate').value = todayISO();
+  ANS_KEYS.forEach(k=>{
+    const ta = document.getElementById(k);
+    ta.value = ''; ta.style.display = 'none';
+  });
+  document.querySelectorAll('[data-group] button').forEach(b=>b.disabled=false);
+  updateButtons(); renderItems(); recalc();
+  window.scrollTo({top:0});
+}
+
+/* ===== 絞り込み ===== */
+function filteredRecords(){
+  const f = document.getElementById('fltFac').value;
+  const u = document.getElementById('fltUnit').value;
+  const ym = document.getElementById('fltYm').value;
+  return loadRecords().map((r,i)=>({r:r, i:i})).filter(({r})=>
+    (!f || (r.facility||'')===f) &&
+    (!u || (r.unit||'')===u) &&
+    (!ym || (r.date||'').slice(0,7)===ym)
+  );
+}
+function fillSelect(sel, values, placeholder){
+  const cur = sel.value;
+  sel.innerHTML = '';
+  sel.appendChild(new Option(placeholder, ''));
+  values.forEach(v=>sel.appendChild(new Option(v, v)));
+  if([...sel.options].some(o=>o.value===cur)) sel.value = cur;
+}
+function renderFilterOptions(){
+  const recs = loadRecords();
+  const fSel = document.getElementById('fltFac');
+  const uSel = document.getElementById('fltUnit');
+  const ymSel = document.getElementById('fltYm');
+  const uniq = a=>[...new Set(a.filter(Boolean))];
+  fillSelect(fSel, uniq(recs.map(r=>r.facility)), 'すべての施設');
+  const inFac = fSel.value ? recs.filter(r=>(r.facility||'')===fSel.value) : recs;
+  fillSelect(uSel, uniq(inFac.map(r=>r.unit)), 'すべてのユニット');
+  fillSelect(ymSel, uniq(recs.map(r=>(r.date||'').slice(0,7))).sort().reverse(), 'すべての年月');
+}
+function clearFilters(){
+  ['fltFac','fltUnit','fltYm'].forEach(id=>document.getElementById(id).value='');
+  renderHistory();
+}
+
+function renderHistory(){
+  renderFilterOptions();
+  const all = loadRecords();
+  const shown = filteredRecords();
+  const filtering = shown.length !== all.length;
+  document.getElementById('recCount').textContent =
+    filtering ? '(表示'+shown.length+'件 / 全'+all.length+'件)' : '(全'+all.length+'件)';
+  const list = document.getElementById('recList');
+  if(all.length===0){ list.innerHTML = '<div class="empty">まだ記録がありません</div>'; return; }
+  if(shown.length===0){ list.innerHTML = '<div class="empty">絞り込みに一致する記録がありません</div>'; return; }
+  list.innerHTML = '';
+  shown.forEach(({r, i})=>{
+    const div = document.createElement('div');
+    div.className = 'rec';
+    div.style.cursor = 'pointer';
+    div.innerHTML =
+      '<div class="rec-main"><div class="rec-id">'+esc(r.id||'(名前未入力)')+'</div>'+
+      '<div class="rec-sub">'+esc(r.date)+' / '+esc(r.age?r.age+'歳':'年齢未入力')+
+      ' / 検査者: '+esc(r.examiner||'-')+
+      (r.facility||r.unit ? '<br>'+esc([r.facility,r.unit].filter(Boolean).join(' ')) : '')+
+      '</div></div>'+
+      '<div class="rec-score'+(r.total<=20?' low':'')+'">'+r.total+'<small style="font-size:12px">点</small></div>'+
+      '<span class="rec-chev">›</span>';
+    div.onclick = ()=>showDetail(r);
+    const del = document.createElement('button');
+    del.className = 'del-btn'; del.textContent = '削除';
+    del.onclick = (e)=>{
+      e.stopPropagation();
+      if(!confirm('この記録('+(r.id||'名前未入力')+' / '+r.date+')を削除しますか?')) return;
+      const rs = loadRecords(); rs.splice(i,1); saveRecords(rs); renderHistory();
+    };
+    div.appendChild(del);
+    list.appendChild(div);
+  });
+  renderExportCard();
+}
+
+/* ===== 記録の詳細表示 ===== */
+const Q_MAX = [1,4,2,3,2,2,6,5,5];
+function showDetail(r){
+  const m = document.getElementById('detailModal');
+  const ans = r.answers || [];
+  let qHtml = '';
+  Q_COLS.forEach(([label, key], i)=>{
+    qHtml += '<div class="dm-q"><div class="dm-qt"><span>'+esc(label)+'</span>'+
+      '<span class="pt">'+esc(String(r[key] ?? '-'))+' / '+Q_MAX[i]+'点</span></div>'+
+      (ans[i] ? '<div class="dm-ans">'+esc(ans[i])+'</div>' : '')+
+      '</div>';
+  });
+  m.innerHTML = '<div class="dm-card">'+
+    '<div class="dm-head">'+esc(r.id||'(名前未入力)')+'</div>'+
+    '<div class="dm-sub">'+esc(r.date)+' / '+esc([r.facility,r.unit].filter(Boolean).join(' ')||'施設未設定')+
+    ' / '+esc(r.age?r.age+'歳':'年齢未入力')+' / 検査者: '+esc(r.examiner||'-')+'</div>'+
+    '<div class="dm-total'+(r.total<=20?' low':'')+'">合計 '+r.total+' / 30点 ― '+esc(r.judge||'')+'</div>'+
+    qHtml+
+    '<div class="dm-q"><div class="dm-qt"><span>野菜の回答数</span><span class="pt">'+esc(String(r.veg ?? '-'))+'個</span></div></div>'+
+    '<div class="dm-q"><div class="dm-qt"><span>単語セット</span><span class="pt">'+(r.words==='B'?'梅・犬・自動車':'桜・猫・電車')+'</span></div></div>'+
+    (r.memo ? '<div class="dm-q"><div class="dm-qt"><span>メモ</span></div><div class="dm-ans">'+esc(r.memo)+'</div></div>' : '')+
+    '<button class="dm-close" onclick="closeDetail()">閉じる</button>'+
+    '</div>';
+  m.style.display = 'flex';
+}
+function closeDetail(){ document.getElementById('detailModal').style.display = 'none'; }
+
+/* ===== CSV/Excel出力(共通の列定義) ===== */
+/* 並び: 基本情報 → 各設問の点数+その回答(交互) → 集計 → メモ */
+const Q_COLS = [
+  ['Q1年齢(1)','q1'], ['Q2日時見当識(4)','q2'], ['Q3場所見当識(2)','q3'],
+  ['Q4語の記銘(3)','q4'], ['Q5計算(2)','q5'], ['Q6逆唱(2)','q6'],
+  ['Q7遅延再生(6)','q7'], ['Q8物品再生(5)','q8'], ['Q9語流暢性(5)','q9']
+];
+function recordHeader(){
+  const h = ['検査日時','施設','フロア/ユニット','利用者名','年齢','検査者'];
+  Q_COLS.forEach(([label], i)=>{ h.push(label); h.push('Q'+(i+1)+'回答'); });
+  h.push('野菜回答数','単語セット','合計(30)','判定','メモ');
+  return h;
+}
+function recordRow(r){
+  const ans = r.answers || [];
+  const row = [r.date, r.facility||'', r.unit||'', r.id, r.age, r.examiner];
+  Q_COLS.forEach(([_, key], i)=>{ row.push(r[key]); row.push(ans[i]||''); });
+  row.push(r.veg, r.words==='A'?'桜猫電車':'梅犬自動車', r.total, r.judge, r.memo);
+  return row;
+}
+function exportBaseName(){
+  const parts = ['HDS-R記録'];
+  const f = document.getElementById('fltFac').value;
+  const u = document.getElementById('fltUnit').value;
+  const ym = document.getElementById('fltYm').value;
+  if(f) parts.push(f);
+  if(u) parts.push(u);
+  parts.push(ym ? ym.replace('/','-') : todayStr().replace(/\//g,'-'));
+  return parts.join('_');
+}
+function csvTargets(){
+  const recs = filteredRecords().map(x=>x.r);
+  if(recs.length===0) alert('出力対象の記録がありません。絞り込み条件を確認してください。');
+  return recs;
+}
+
+/* ===== Excel(.xlsx)出力: ユニットごとにシート分け ===== */
+let CRC_TABLE = null;
+function crc32(u8){
+  if(!CRC_TABLE){
+    CRC_TABLE = new Int32Array(256);
+    for(let n=0; n<256; n++){
+      let c = n;
+      for(let k=0; k<8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      CRC_TABLE[n] = c;
+    }
+  }
+  let c = -1;
+  for(let i=0; i<u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ -1) >>> 0;
+}
+/* 無圧縮ZIP(xlsxの container)を組み立てる */
+function makeZip(files){
+  const parts = [], central = [];
+  let offset = 0;
+  files.forEach(f=>{
+    const nameB = new TextEncoder().encode(f.name);
+    const crc = crc32(f.data);
+    const local = new Uint8Array(30 + nameB.length);
+    const dv = new DataView(local.buffer);
+    dv.setUint32(0, 0x04034b50, true);
+    dv.setUint16(4, 20, true);
+    dv.setUint16(6, 0x0800, true);          // UTF-8ファイル名
+    dv.setUint32(14, crc, true);
+    dv.setUint32(18, f.data.length, true);
+    dv.setUint32(22, f.data.length, true);
+    dv.setUint16(26, nameB.length, true);
+    local.set(nameB, 30);
+    parts.push(local, f.data);
+    const cen = new Uint8Array(46 + nameB.length);
+    const cv = new DataView(cen.buffer);
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 20, true);
+    cv.setUint16(6, 20, true);
+    cv.setUint16(8, 0x0800, true);
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, f.data.length, true);
+    cv.setUint32(24, f.data.length, true);
+    cv.setUint16(28, nameB.length, true);
+    cv.setUint32(42, offset, true);
+    cen.set(nameB, 46);
+    central.push(cen);
+    offset += local.length + f.data.length;
+  });
+  const centralSize = central.reduce((s,c)=>s+c.length, 0);
+  const end = new Uint8Array(22);
+  const ev = new DataView(end.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(8, files.length, true);
+  ev.setUint16(10, files.length, true);
+  ev.setUint32(12, centralSize, true);
+  ev.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, end],
+    {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function xmlEsc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function sheetXml(recs){
+  const rows = [recordHeader()].concat(recs.map(recordRow));
+  const body = rows.map(cells=>'<row>'+cells.map(v=>{
+    if(v !== '' && v != null && /^-?\d+(\.\d+)?$/.test(String(v)))
+      return '<c><v>'+v+'</v></c>';
+    return '<c t="inlineStr"><is><t xml:space="preserve">'+xmlEsc(v)+'</t></is></c>';
+  }).join('')+'</row>').join('');
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+    '<sheetData>'+body+'</sheetData></worksheet>';
+}
+function sanitizeSheetName(name, used){
+  let n = String(name).replace(/[\\\/\?\*\[\]:]/g,'・').slice(0,28) || 'シート';
+  let out = n, k = 2;
+  while(used.has(out)){ out = n+'('+(k++)+')'; }
+  used.add(out);
+  return out;
+}
+/* ユニットごとにグループ化(設定の並び順を優先) */
+function unitGroups(recs){
+  const facs = [...new Set(recs.map(r=>r.facility||''))].filter(Boolean);
+  const multi = facs.length > 1;
+  const keyOf = r=>{
+    const u = r.unit || 'ユニット未設定';
+    return multi && r.facility ? r.facility+'_'+u : u;
+  };
+  const order = [];
+  loadSettings().facilities.forEach(f=>f.units.forEach(u=>{
+    order.push(multi ? f.name+'_'+u : u);
+  }));
+  const map = new Map();
+  recs.forEach(r=>{
+    const k = keyOf(r);
+    if(!map.has(k)) map.set(k, []);
+    map.get(k).push(r);
+  });
+  return [...map.keys()].sort((a,b)=>{
+    const ia = order.indexOf(a), ib = order.indexOf(b);
+    return (ia<0?9999:ia) - (ib<0?9999:ib);
+  }).map(k=>({name:k, recs:map.get(k)}));
+}
+function buildXlsxBlob(recs){
+  const groups = [{name:'全体', recs:recs}].concat(unitGroups(recs));
+  const enc = new TextEncoder();
+  const used = new Set();
+  const sheets = groups.map((g,i)=>({
+    id: i+1, name: sanitizeSheetName(g.name, used), recs: g.recs
+  }));
+  const files = [];
+  files.push({name:'[Content_Types].xml', data:enc.encode(
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+    '<Default Extension="xml" ContentType="application/xml"/>'+
+    '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+
+    sheets.map(s=>'<Override PartName="/xl/worksheets/sheet'+s.id+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('')+
+    '</Types>')});
+  files.push({name:'_rels/.rels', data:enc.encode(
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'+
+    '</Relationships>')});
+  files.push({name:'xl/workbook.xml', data:enc.encode(
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+
+    '<sheets>'+sheets.map(s=>'<sheet name="'+xmlEsc(s.name)+'" sheetId="'+s.id+'" r:id="rId'+s.id+'"/>').join('')+'</sheets>'+
+    '</workbook>')});
+  files.push({name:'xl/_rels/workbook.xml.rels', data:enc.encode(
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    sheets.map(s=>'<Relationship Id="rId'+s.id+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+s.id+'.xml"/>').join('')+
+    '</Relationships>')});
+  sheets.forEach(s=>{
+    files.push({name:'xl/worksheets/sheet'+s.id+'.xml', data:enc.encode(sheetXml(s.recs))});
+  });
+  return makeZip(files);
+}
+function xlsxFileName(){
+  return exportBaseName() + '_ユニット別.xlsx';
+}
+function exportXlsx(){
+  if(pinSet() && !adminActive()){
+    alert('ダウンロードは管理者モードでのみ行えます。');
+    renderExportCard();
+    return;
+  }
+  const recs = csvTargets();
+  if(recs.length===0) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(buildXlsxBlob(recs));
+  a.download = xlsxFileName();
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+}
+
+/* ===== ダウンロード権限(管理者モード) ===== */
+const ADMIN_MINUTES = 15;
+let adminUntil = Number(sessionStorage.getItem('hdsr_admin_until') || 0);
+
+async function sha256Hex(str){
+  if(window.crypto && crypto.subtle){
+    const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  // crypto.subtleが使えない環境向けの簡易フォールバック
+  let h1 = 0x811c9dc5;
+  for(let i=0; i<str.length; i++){ h1 ^= str.charCodeAt(i); h1 = Math.imul(h1, 0x01000193) >>> 0; }
+  return 'f' + h1.toString(16);
+}
+function pinData(){
+  try{ return JSON.parse(localStorage.getItem('hdsr_admin') || 'null'); }
+  catch(e){ return null; }
+}
+function pinSet(){ return !!pinData(); }
+function adminActive(){ return pinSet() && Date.now() < adminUntil; }
+
+async function verifyPin(input){
+  const d = pinData();
+  if(!d) return false;
+  return (await sha256Hex(d.salt + input)) === d.hash;
+}
+function failData(){
+  try{ return JSON.parse(localStorage.getItem('hdsr_pin_fail') || '{"count":0,"until":0}'); }
+  catch(e){ return {count:0, until:0}; }
+}
+async function enterAdminMode(){
+  const f = failData();
+  if(Date.now() < f.until){
+    alert('暗証番号の間違いが続いたため、1分ほど待ってからやり直してください。');
+    return;
+  }
+  const input = prompt('管理者用の暗証番号を入力してください');
+  if(input == null) return;
+  if(await verifyPin(input.trim())){
+    localStorage.setItem('hdsr_pin_fail', '{"count":0,"until":0}');
+    adminUntil = Date.now() + ADMIN_MINUTES * 60 * 1000;
+    sessionStorage.setItem('hdsr_admin_until', String(adminUntil));
+    renderExportCard();
+    renderSetView();
+  }else{
+    const nf = {count: f.count + 1, until: 0};
+    if(nf.count >= 5){ nf.until = Date.now() + 60 * 1000; nf.count = 0; }
+    localStorage.setItem('hdsr_pin_fail', JSON.stringify(nf));
+    alert('暗証番号が違います。');
+  }
+}
+function exitAdminMode(){
+  adminUntil = 0;
+  sessionStorage.removeItem('hdsr_admin_until');
+  renderExportCard();
+  renderSetView();
+}
+function renderExportCard(){
+  const card = document.getElementById('exportCard');
+  if(pinSet() && !adminActive()){
+    card.innerHTML =
+      '<button class="big-btn sub" onclick="enterAdminMode()">🔒 管理者モードに入る</button>'+
+      '<div class="q-note">Excelのダウンロードは、管理者用の暗証番号を知っている職員のみ行えます。</div>';
+    return;
+  }
+  const mins = pinSet() ? Math.max(1, Math.ceil((adminUntil - Date.now()) / 60000)) : 0;
+  card.innerHTML =
+    '<button class="big-btn" onclick="exportXlsx()">📊 Excelをダウンロード(ユニット別シート)</button>'+
+    '<div class="q-note">先頭に「全体」シート、続いてフロア/ユニットごとのシートに分かれます。ExcelでもGoogleスプレッドシートでもそのまま開けます。絞り込み中は対象の記録だけが出力されます。</div>'+
+    (pinSet()
+      ? '<div class="q-note">🔓 管理者モード中(あと約'+mins+'分で自動終了) '+
+        '<button class="del-btn" style="min-height:34px" onclick="exitAdminMode()">今すぐ終了</button></div>'
+      : '<div class="q-note">⚠ 暗証番号が未設定のため、現在は誰でもダウンロードできます。設定タブで管理者用暗証番号を設定すると制限できます。</div>');
+}
+
+/* 設定タブ: 暗証番号の設定・変更・解除 */
+function renderPinArea(){
+  const area = document.getElementById('pinArea');
+  const set = pinSet();
+  area.innerHTML =
+    (set
+      ? '<div class="q-note">✅ 設定済みです。変更・解除には現在の暗証番号が必要です。</div>'+
+        '<div class="row"><input type="password" id="pinCur" inputmode="numeric" placeholder="現在の暗証番号" style="flex:1; width:auto"></div>'
+      : '<div class="q-note">未設定です。設定すると、履歴タブのダウンロードが管理者専用になります。</div>'+
+        '<input type="hidden" id="pinCur" value="">')+
+    '<div class="row"><input type="password" id="pinNew" inputmode="numeric" placeholder="新しい暗証番号(4桁以上)" style="flex:1; width:auto"></div>'+
+    '<div class="row"><button class="score-btn wide" onclick="savePin()">'+(set?'変更する':'設定する')+'</button>'+
+    (set ? '<button class="score-btn" onclick="clearPin()">解除</button>' : '')+
+    '</div>';
+}
+async function savePin(){
+  if(pinSet() && !(await verifyPin(document.getElementById('pinCur').value.trim()))){
+    alert('現在の暗証番号が違います。'); return;
+  }
+  const nw = document.getElementById('pinNew').value.trim();
+  if(nw.length < 4){ alert('暗証番号は4桁以上にしてください。'); return; }
+  const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  localStorage.setItem('hdsr_admin', JSON.stringify({salt: salt, hash: await sha256Hex(salt + nw)}));
+  // 設定した本人はそのまま管理者モードを継続(直後にロックされないように)
+  adminUntil = Date.now() + ADMIN_MINUTES * 60 * 1000;
+  sessionStorage.setItem('hdsr_admin_until', String(adminUntil));
+  renderExportCard();
+  renderPinArea();
+  alert('暗証番号を設定しました。ダウンロードと設定の変更は管理者モード専用になります。');
+}
+async function clearPin(){
+  if(!(await verifyPin(document.getElementById('pinCur').value.trim()))){
+    alert('現在の暗証番号が違います。'); return;
+  }
+  if(!confirm('暗証番号を解除しますか?(誰でもダウンロードできる状態に戻ります)')) return;
+  localStorage.removeItem('hdsr_admin');
+  exitAdminMode();
+  renderPinArea();
+}
+
+/* ===== Googleスプレッドシート連携(GAS) ===== */
+const SYNC_EXTRA_HEADER = '同期ID';
+function loadGas(){
+  try{ return JSON.parse(localStorage.getItem('hdsr_gas')||'{}'); }catch(e){ return {}; }
+}
+function loadQueue(){
+  try{ return JSON.parse(localStorage.getItem('hdsr_sync_queue')||'[]'); }catch(e){ return []; }
+}
+function saveQueue(q){ localStorage.setItem('hdsr_sync_queue', JSON.stringify(q)); }
+function syncHeader(){ return [...recordHeader(), SYNC_EXTRA_HEADER]; }
+function enqueueSync(rec){
+  const q = loadQueue();
+  q.push({ uid: rec.uid, row: [...recordRow(rec), rec.uid] });
+  saveQueue(q);
+}
+/* キューを順に送信。CORSプリフライトを避けるため text/plain で送る */
+async function flushQueue(){
+  const cfg = loadGas();
+  let q = loadQueue();
+  if(!cfg.url) return {skipped:true, remaining:q.length};
+  let sent = 0;
+  while(q.length){
+    const item = q[0];
+    try{
+      const res = await fetch(cfg.url, {
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({token:cfg.token||'', header:syncHeader(), row:item.row, uid:item.uid})
+      });
+      const j = await res.json();
+      if(!j.ok) throw new Error(j.error||'送信エラー');
+      q.shift(); saveQueue(q); sent++;   // 成功(重複時もok)→キューから除去
+    }catch(e){
+      return {sent, remaining:q.length, error:e.message};   // 通信不可等→残して中断
+    }
+  }
+  return {sent, remaining:0};
+}
+function saveGasConfig(){
+  const url = document.getElementById('gasUrl').value.trim();
+  const token = document.getElementById('gasToken').value.trim();
+  if(url && !/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(url)){
+    if(!confirm('URLが想定の形式(…/exec で終わる)と異なります。このまま保存しますか?')) return;
+  }
+  localStorage.setItem('hdsr_gas', JSON.stringify({url, token}));
+  renderGasArea();
+  alert(url ? '連携設定を保存しました。' : '連携を無効にしました。');
+}
+async function testGas(){
+  const url = document.getElementById('gasUrl').value.trim();
+  const token = document.getElementById('gasToken').value.trim();
+  if(!url){ alert('ウェブアプリURLを入力してください。'); return; }
+  try{
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({token, test:true})});
+    const j = await res.json();
+    if(j.ok) alert('接続に成功しました。実際に検査を保存すると、スプレッドシートに行が追加されます。');
+    else alert('接続できましたが、エラーが返りました:\n'+(j.error||'不明')+'\n合言葉(SECRET)が一致しているか確認してください。');
+  }catch(e){
+    alert('接続に失敗しました。URLや「アクセスできるユーザー: 全員」の公開設定を確認してください。\n'+e.message);
+  }
+}
+async function manualFlush(){
+  const r = await flushQueue();
+  if(r.error) alert('再送信中に中断しました: '+r.error+'\n未送信 '+r.remaining+'件');
+  else alert(r.sent+'件を送信しました。');
+  renderGasArea();
+}
+function renderGasArea(){
+  const cfg = loadGas();
+  const q = loadQueue();
+  const area = document.getElementById('gasArea');
+  if(!area) return;
+  area.innerHTML =
+    '<label class="fld">ウェブアプリURL</label>'+
+    '<input type="text" id="gasUrl" placeholder="https://script.google.com/macros/s/.../exec" value="'+esc(cfg.url||'')+'">'+
+    '<label class="fld" style="margin-top:8px">合言葉(スクリプトのSECRETと一致させる)</label>'+
+    '<input type="text" id="gasToken" placeholder="任意の文字列" value="'+esc(cfg.token||'')+'">'+
+    '<div class="row" style="margin-top:10px">'+
+      '<button class="score-btn wide" onclick="saveGasConfig()">保存</button>'+
+      '<button class="score-btn" onclick="testGas()">接続テスト</button>'+
+    '</div>'+
+    (cfg.url
+      ? '<div class="q-note">✅ 連携 有効。保存のたびに自動送信されます。'+
+        (q.length
+          ? ' <b style="color:var(--danger)">未送信 '+q.length+'件</b> '+
+            '<button class="del-btn" style="min-height:34px" onclick="manualFlush()">今すぐ再送信</button>'
+          : ' 未送信なし')+
+        '</div>'
+      : '<div class="q-note">未設定です。URLと合言葉を入れて「保存」すると連携が有効になります。</div>');
+}
+
+/* ===== タブ・ユーティリティ ===== */
+function showTab(t){
+  document.getElementById('examView').style.display = t==='exam' ? '' : 'none';
+  document.getElementById('histView').style.display = t==='hist' ? '' : 'none';
+  document.getElementById('setView').style.display = t==='set' ? '' : 'none';
+  document.getElementById('tabExam').classList.toggle('active', t==='exam');
+  document.getElementById('tabHist').classList.toggle('active', t==='hist');
+  document.getElementById('tabSet').classList.toggle('active', t==='set');
+  if(t==='hist') renderHistory();
+  if(t==='set') renderSetView();
+  window.scrollTo({top:0});
+}
+
+/* 設定タブのロック制御: 暗証番号設定済み&未解錠なら本体を隠す */
+function renderSetView(){
+  const locked = pinSet() && !adminActive();
+  document.getElementById('setLock').style.display = locked ? '' : 'none';
+  document.getElementById('setBody').style.display = locked ? 'none' : '';
+  if(!locked){ renderSettings(); renderPinArea(); renderGasArea(); }
+}
+function pad(n){ return String(n).padStart(2,'0'); }
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+pad(d.getDate());
+}
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+function examDateStr(){
+  const v = document.getElementById('examDate').value;   // YYYY-MM-DD
+  const d = new Date();
+  return (v ? v.replace(/-/g,'/') : todayStr())+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+/* オフライン動作のためのService Worker登録(対応ブラウザのみ) */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
