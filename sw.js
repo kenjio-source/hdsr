@@ -1,7 +1,7 @@
 /* HDS-R アプリ オフライン用 Service Worker */
 /* アプリ本体(index.html)を更新したら、下の数字を1つ上げてください(例 v1→v2)。
    これで全端末が次回オンライン時に新しい版へ自動更新されます。 */
-const CACHE = 'hdsr-v1';
+const CACHE = 'hdsr-v2';
 const ASSETS = [
   './',
   './index.html',

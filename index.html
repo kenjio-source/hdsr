@@ -325,7 +325,14 @@
     <div class="q-note">設定すると、検査を保存するたびにスプレッドシートへ自動で1行追加されます。連携しなくてもアプリは従来どおり使えます(端末内に保存)。設定手順は管理者にお問い合わせください。</div>
     <div id="gasArea"></div>
   </div>
-  <p class="disclaimer">設定はこの端末のブラウザ内に保存されます。端末ごとに設定が必要です。</p>
+  <div class="card">
+    <div class="q-text" style="margin-bottom:4px">設定を他の端末にコピー</div>
+    <div class="q-note">この端末の設定(施設・ユニット・暗証番号・スプレッドシート連携)を「設定コード」として書き出し、他の端末で読み込めば同じ設定にできます。記録データは含まれません。</div>
+    <button class="big-btn sub" onclick="exportSettings()">📋 設定コードを書き出す(コピー)</button>
+    <textarea id="settingsCode" rows="3" placeholder="他の端末で書き出した設定コードをここに貼り付けて「読み込む」を押してください"></textarea>
+    <button class="big-btn sub" style="margin-top:10px" onclick="importSettings()">📥 設定コードを読み込む</button>
+  </div>
+  <p class="disclaimer">設定はこの端末のブラウザ内に保存されます。端末ごとに設定が必要です(上の「設定コード」で一括コピーできます)。</p>
  </div>
 </main>
 
@@ -1188,6 +1195,54 @@ async function clearPin(){
   localStorage.removeItem('hdsr_admin');
   exitAdminMode();
   renderPinArea();
+}
+
+/* ===== 設定の書き出し/読み込み(端末間コピー) ===== */
+function exportSettings(){
+  const payload = {
+    t: 'hdsr-settings',
+    v: 1,
+    settings: loadSettings(),                                   // 施設・ユニット
+    admin: (function(){ try{ return JSON.parse(localStorage.getItem('hdsr_admin')||'null'); }catch(e){ return null; } })(), // 暗証番号(ハッシュ)
+    gas: loadGas()                                              // スプレッドシート連携
+  };
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  const ta = document.getElementById('settingsCode');
+  ta.value = code;
+  ta.select();
+  let copied = false;
+  try{ copied = document.execCommand('copy'); }catch(e){}
+  if(navigator.clipboard){ navigator.clipboard.writeText(code).catch(()=>{}); copied = true; }
+  alert(copied
+    ? '設定コードを書き出してコピーしました。\n他の端末の同じ欄に貼り付けて「読み込む」を押してください。'
+    : '設定コードを書き出しました。上の欄の文字を選択してコピーしてください。');
+}
+function importSettings(){
+  const code = document.getElementById('settingsCode').value.trim();
+  if(!code){ alert('設定コードを貼り付けてください。'); return; }
+  let payload;
+  try{
+    payload = JSON.parse(decodeURIComponent(escape(atob(code))));
+  }catch(e){ alert('設定コードを読み取れませんでした。コピーmiss がないか確認してください。'); return; }
+  if(!payload || payload.t !== 'hdsr-settings'){ alert('これはHDS-Rの設定コードではないようです。'); return; }
+  if(!confirm('この端末の設定を、読み込んだ内容で上書きします。よろしいですか?\n(記録データはそのまま残ります)')) return;
+
+  if(payload.settings && Array.isArray(payload.settings.facilities)){
+    saveSettings(payload.settings);
+  }
+  if(payload.admin && payload.admin.hash){
+    localStorage.setItem('hdsr_admin', JSON.stringify(payload.admin));
+    // 読み込んだ本人はそのまま管理者モードを継続(直後にロックされないように)
+    adminUntil = Date.now() + ADMIN_MINUTES * 60 * 1000;
+    sessionStorage.setItem('hdsr_admin_until', String(adminUntil));
+  }
+  if(payload.gas){
+    localStorage.setItem('hdsr_gas', JSON.stringify(payload.gas));
+  }
+  document.getElementById('settingsCode').value = '';
+  alert('設定を読み込みました。');
+  renderLocSelects();
+  renderSetView();
 }
 
 /* ===== Googleスプレッドシート連携(GAS) ===== */
