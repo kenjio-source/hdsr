@@ -126,6 +126,19 @@
   #overlay .ov-pic{font-size:140px; line-height:1;}
   #overlay .ov-pic img{max-width:80vw; max-height:50vh; border-radius:16px;}
   #overlay .ov-name{font-size:40px; font-weight:800; margin:18px 0 6px;}
+  /* 保存中の待ち画面 */
+  #savingOverlay{position:fixed; inset:0; z-index:120; background:rgba(28,40,38,.55);
+                 display:flex; align-items:center; justify-content:center; padding:24px;}
+  #savingOverlay[hidden]{display:none;}
+  .saving-box{background:#fff; border-radius:16px; padding:24px 22px; text-align:center;
+              max-width:320px; width:100%; box-shadow:0 8px 30px rgba(0,0,0,.2);}
+  .saving-spin{width:44px; height:44px; margin:0 auto 14px; border-radius:50%;
+               border:5px solid var(--main-light); border-top-color:var(--main);
+               animation:savingSpin .9s linear infinite;}
+  @keyframes savingSpin{to{transform:rotate(360deg);}}
+  .saving-msg{font-size:17px; font-weight:700; color:var(--text); line-height:1.5;}
+  .saving-sub{font-size:13px; color:#5f6f6d; margin-top:6px;}
+  .save-btn:disabled{opacity:.5;}
   #overlay .ov-step{font-size:14px; opacity:.7;}
   #overlay .ov-msg{font-size:24px; font-weight:700; line-height:1.7;}
   #overlay button{margin-top:30px; min-height:56px; padding:0 34px; font-size:18px; font-weight:700;
@@ -424,6 +437,13 @@
 
 <!-- ========== 物品提示オーバーレイ ========== -->
 <div id="overlay" style="display:none"></div>
+<div id="savingOverlay" hidden role="alertdialog" aria-live="assertive">
+  <div class="saving-box">
+    <div class="saving-spin"></div>
+    <div class="saving-msg">保存中です。<br>少々お待ちください</div>
+    <div class="saving-sub">スプレッドシートへ送信しています</div>
+  </div>
+</div>
 
 <!-- ========== 記録詳細モーダル ========== -->
 <div id="detailModal" style="display:none"></div>
@@ -824,6 +844,7 @@ function saveRecords(recs){
 }
 
 async function saveRecord(){
+  if(saving) return;   // 保存中の2回押しは無視
   const unanswered = ['q1','q2y','q2m','q2d','q2w','q3','q4a','q4b','q4c',
                       'q5a','q5b','q6a','q6b','q7a','q7b','q7c']
                      .filter(g=>state[g]===undefined).length;
@@ -853,20 +874,34 @@ async function saveRecord(){
     judge: t<=20 ? '認知症の疑い(20点以下)' : '非認知症域(21点以上)',
     memo: document.getElementById('memo').value.trim(),
   };
-  const recs = loadRecords();
-  recs.unshift(rec);
-  saveRecords(recs);
-  enqueueSync(rec);
-  renderHistory();
-  let msg = '保存しました(合計 '+t+' 点)。';
-  if(loadGas().url){
-    const r = await flushQueue();
-    msg += (r.remaining>0)
-      ? '\n⚠ スプレッドシート未送信 '+r.remaining+'件(オンライン時に自動再送されます)。'
-      : '\nスプレッドシートにも追加しました。';
+  setSaving(true);
+  try{
+    const recs = loadRecords();
+    recs.unshift(rec);
+    saveRecords(recs);
+    enqueueSync(rec);
+    renderHistory();
+    let msg = '保存しました(合計 '+t+' 点)。';
+    if(loadGas().url){
+      document.getElementById('savingOverlay').hidden = false;   // 送信中は待ち画面
+      const r = await flushQueue();
+      msg += (r.remaining>0)
+        ? '\n⚠ スプレッドシート未送信 '+r.remaining+'件(オンライン時に自動再送されます)。'
+        : '\nスプレッドシートにも追加しました。';
+    }
+    setSaving(false);
+    alert(msg);
+    resetForm(false);
+  }finally{
+    setSaving(false);
   }
-  alert(msg);
-  resetForm(false);
+}
+/* 保存中: 待ち画面の表示切替と、保存ボタンの2回押し防止 */
+let saving = false;
+function setSaving(on){
+  saving = on;
+  document.querySelectorAll('.save-btn').forEach(b=>b.disabled = on);
+  if(!on) document.getElementById('savingOverlay').hidden = true;
 }
 function genUid(){ return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8); }
 
@@ -1370,16 +1405,21 @@ async function flushQueue(){
   let sent = 0;
   while(q.length){
     const item = q[0];
+    const ctrl = new AbortController();
+    const timer = setTimeout(()=>ctrl.abort(), 20000);   // 20秒で打ち切り(未送信として残し、後で自動再送)
     try{
       const res = await fetch(cfg.url, {
         method:'POST',
         headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body: JSON.stringify({token:cfg.token||'', header:syncHeader(), row:item.row, uid:item.uid})
+        body: JSON.stringify({token:cfg.token||'', header:syncHeader(), row:item.row, uid:item.uid}),
+        signal: ctrl.signal
       });
       const j = await res.json();
+      clearTimeout(timer);
       if(!j.ok) throw new Error(j.error||'送信エラー');
       q.shift(); saveQueue(q); sent++;   // 成功(重複時もok)→キューから除去
     }catch(e){
+      clearTimeout(timer);
       return {sent, remaining:q.length, error:e.message};   // 通信不可等→残して中断
     }
   }
