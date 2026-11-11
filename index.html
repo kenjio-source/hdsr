@@ -65,6 +65,24 @@
   .unit-chip button{border:none; background:none; color:var(--main); font-size:15px; padding:0 2px;}
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
   label.fld{display:block; font-size:12px; color:#5f6f6d; font-weight:600; margin-bottom:3px;}
+  /* 日常生活自立度 */
+  .lvl-block{margin-top:12px;}
+  .lvl-head{display:flex; align-items:flex-end; justify-content:space-between; gap:8px;}
+  .lvl-head label.fld{margin-bottom:5px;}
+  .lvl-info{flex-shrink:0; font-size:13px; font-weight:600; color:var(--main); background:#fff;
+            border:1.5px solid var(--main); border-radius:16px; padding:5px 12px; margin-bottom:4px;}
+  .lvl-info.open{background:var(--main); color:#fff;}
+  .lvl-panel{margin-top:8px; border:1px solid var(--line); border-radius:10px;
+             background:var(--main-light); padding:8px;}
+  .lvl-tbl{width:100%; border-collapse:collapse; font-size:13px; line-height:1.55;}
+  .lvl-tbl th{width:4.2em; vertical-align:top; text-align:center; color:var(--main);
+              padding:6px 4px; border-bottom:1px solid var(--line); font-size:15px;}
+  .lvl-tbl th small{font-size:10px; font-weight:600; color:#5f6f6d;}
+  .lvl-tbl td{padding:6px 4px; border-bottom:1px solid var(--line);}
+  .lvl-tbl tr:last-child th, .lvl-tbl tr:last-child td{border-bottom:none;}
+  .lvl-tbl .sub{margin-top:4px; padding-left:6px; border-left:3px solid var(--line);}
+  .lvl-tbl .ex{display:block; font-size:12px; color:#5f6f6d;}
+  .lvl-src{font-size:10.5px; color:#5f6f6d; margin-top:6px; line-height:1.5;}
   /* 設問8 物品カード */
   .items-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin:10px 0;}
   .item-card{position:relative; border:2px solid var(--line); border-radius:12px; background:#fff;
@@ -179,6 +197,65 @@
         <input type="text" id="examiner" placeholder="例: 大田"></div>
       <div><label class="fld">検査日</label>
         <input type="date" id="examDate"></div>
+    </div>
+
+    <!-- 日常生活自立度(選択式・基準はボタンで開閉) -->
+    <div class="lvl-block">
+      <div class="lvl-head"><label class="fld" for="adlLevel">障害高齢者の日常生活自立度(寝たきり度)</label>
+        <button type="button" class="lvl-info" id="adlInfoBtn" onclick="toggleLevelInfo('adl')">ⓘ 基準</button></div>
+      <select id="adlLevel">
+        <option value="">未選択</option>
+        <option>自立</option>
+        <option>J1</option><option>J2</option>
+        <option>A1</option><option>A2</option>
+        <option>B1</option><option>B2</option>
+        <option>C1</option><option>C2</option>
+      </select>
+      <div class="lvl-panel" id="adlInfo" hidden>
+        <table class="lvl-tbl">
+          <tr><th>J<br><small>生活自立</small></th><td>何らかの障害等を有するが、日常生活はほぼ自立しており独力で外出する。
+            <div class="sub"><b>J1</b> 交通機関等を利用して外出する。</div>
+            <div class="sub"><b>J2</b> 隣近所へなら外出する。</div></td></tr>
+          <tr><th>A<br><small>準寝たきり</small></th><td>屋内での生活はおおむね自立しているが、介助なしには外出しない。
+            <div class="sub"><b>A1</b> 介助により外出し、日中はほとんどベッドから離れて生活する。</div>
+            <div class="sub"><b>A2</b> 外出の頻度が少なく、日中も寝たり起きたりの生活をしている。</div></td></tr>
+          <tr><th>B<br><small>寝たきり</small></th><td>屋内での生活は何らかの介助を要し、日中もベッド上での生活が主体であるが座位を保つ。
+            <div class="sub"><b>B1</b> 車椅子に移乗し、食事、排泄はベッドから離れて行う。</div>
+            <div class="sub"><b>B2</b> 介助により車椅子に移乗する。</div></td></tr>
+          <tr><th>C<br><small>寝たきり</small></th><td>1日中ベッド上で過ごし、排泄、食事、着替において介助を要する。
+            <div class="sub"><b>C1</b> 自力で寝返りをうつ。</div>
+            <div class="sub"><b>C2</b> 自力では寝返りもうたない。</div></td></tr>
+        </table>
+        <div class="lvl-src">出典:平成3年11月18日 老健第102-2号 厚生省大臣官房老人保健福祉部長通知(自治体公開資料より転記)。判定は担当者が行ってください。</div>
+      </div>
+    </div>
+
+    <div class="lvl-block">
+      <div class="lvl-head"><label class="fld" for="dementiaLevel">認知症高齢者の日常生活自立度</label>
+        <button type="button" class="lvl-info" id="dementiaInfoBtn" onclick="toggleLevelInfo('dementia')">ⓘ 基準</button></div>
+      <select id="dementiaLevel">
+        <option value="">未選択</option>
+        <option>自立</option>
+        <option>Ⅰ</option>
+        <option>Ⅱa</option><option>Ⅱb</option>
+        <option>Ⅲa</option><option>Ⅲb</option>
+        <option>Ⅳ</option>
+        <option>M</option>
+      </select>
+      <div class="lvl-panel" id="dementiaInfo" hidden>
+        <table class="lvl-tbl">
+          <tr><th>Ⅰ</th><td>何らかの認知症を有するが、日常生活は家庭内及び社会的にほぼ自立している。</td></tr>
+          <tr><th>Ⅱ</th><td>日常生活に支障を来すような症状、行動や意思疎通の困難さが多少見られても、誰かが注意していれば自立できる。
+            <div class="sub"><b>Ⅱa</b> 家庭外で上記Ⅱの状態が見られる。<span class="ex">例:度々道に迷うとか、買物や事務、金銭管理などそれまでできたことにミスが目立つ等</span></div>
+            <div class="sub"><b>Ⅱb</b> 家庭内でも上記Ⅱの状態が見られる。<span class="ex">例:服薬管理ができない、電話の対応や訪問者との応対など一人で留守番ができない等</span></div></td></tr>
+          <tr><th>Ⅲ</th><td>日常生活に支障を来すような症状、行動や意思疎通の困難さがときどき見られ、介護を必要とする。
+            <div class="sub"><b>Ⅲa</b> 日中を中心として上記Ⅲの状態が見られる。<span class="ex">例:着替え、食事、排便、排尿が上手にできない、又は時間がかかる。やたらに物を口に入れる、物を拾い集める、はいかい、失禁、大声、奇声をあげる、火の不始末、不潔行為、性的異常行為等</span></div>
+            <div class="sub"><b>Ⅲb</b> 夜間を中心として上記Ⅲの状態が見られる。<span class="ex">例:ランクⅢaに同じ</span></div></td></tr>
+          <tr><th>Ⅳ</th><td>日常生活に支障を来すような症状、行動や意思疎通の困難さが頻繁に見られ、常に介護を必要とする。<span class="ex">例:ランクⅢに同じ</span></td></tr>
+          <tr><th>M</th><td>著しい精神症状や問題行為あるいは重篤な身体疾患が見られ、専門医療を必要とする。<span class="ex">例:せん妄、妄想、興奮、自傷・他害等の精神症状や精神症状に起因する問題行動が継続する状態等</span></td></tr>
+        </table>
+        <div class="lvl-src">出典:平成18年4月3日 老発第0403003号「「痴呆性老人の生活自立度判定基準」の活用についての一部改正について」(自治体公開資料より転記)。判定は担当者が行ってください。</div>
+      </div>
     </div>
   </div>
 
@@ -357,11 +434,21 @@
 'use strict';
 
 /* ===== 設問・物品定義 ===== */
+/* 百円玉風の絵(銀色の円に「100」)。文字サイズ(1em)に合わせて拡大縮小する */
+const COIN100_SVG =
+  '<svg viewBox="0 0 100 100" width="1em" height="1em" role="img" aria-label="百円玉">'+
+  '<circle cx="50" cy="50" r="48" fill="#9aa3a8"/>'+
+  '<circle cx="50" cy="50" r="44" fill="#d7dcdf"/>'+
+  '<circle cx="50" cy="50" r="38" fill="none" stroke="#a9b1b6" stroke-width="2"/>'+
+  '<circle cx="46" cy="44" r="30" fill="#e8ecee" opacity=".6"/>'+
+  '<text x="50" y="62" text-anchor="middle" font-size="34" font-weight="800" '+
+  'font-family="-apple-system,Hiragino Sans,sans-serif" fill="#5e676c">100</text>'+
+  '</svg>';
 const ITEMS = [
   {key:'i1', name:'時計',   emoji:'⌚'},
   {key:'i2', name:'鍵',     emoji:'🔑'},
   {key:'i3', name:'ペン',   emoji:'🖊️'},
-  {key:'i4', name:'硬貨',   emoji:'🪙'},
+  {key:'i4', name:'硬貨',   emoji:COIN100_SVG},
   {key:'i5', name:'はさみ', emoji:'✂️'},
 ];
 const WORD_SETS = {
@@ -617,6 +704,15 @@ function setWordSet(s){
   ['w1lbl2','w2lbl2','w3lbl2'].forEach((id,i)=>document.getElementById(id).textContent = w[i]+hints[i]);
 }
 
+/* ===== 日常生活自立度の基準表示(タップで開く/もう一度で閉じる) ===== */
+function toggleLevelInfo(kind){
+  const panel = document.getElementById(kind+'Info');
+  const btn = document.getElementById(kind+'InfoBtn');
+  panel.hidden = !panel.hidden;
+  btn.classList.toggle('open', !panel.hidden);
+  btn.textContent = panel.hidden ? 'ⓘ 基準' : '✕ 閉じる';
+}
+
 /* ===== 設問8 物品 ===== */
 function renderItems(){
   const grid = document.getElementById('itemsGrid');
@@ -746,6 +842,8 @@ async function saveRecord(){
     id: document.getElementById('userId').value.trim(),
     age: document.getElementById('userAge').value.trim(),
     examiner: document.getElementById('examiner').value.trim(),
+    adlLevel: document.getElementById('adlLevel').value,
+    dementiaLevel: document.getElementById('dementiaLevel').value,
     q1:subScore('q1'), q2:subScore('q2'), q3:subScore('q3'),
     q4:subScore('q4'), q5:subScore('q5'), q6:subScore('q6'),
     q7:subScore('q7'), q8:subScore('q8'), q9:vegScore(),
@@ -779,6 +877,8 @@ function resetForm(ask){
   document.getElementById('vegScore').textContent = 0;
   document.getElementById('userId').value = '';
   document.getElementById('userAge').value = '';
+  document.getElementById('adlLevel').value = '';
+  document.getElementById('dementiaLevel').value = '';
   document.getElementById('memo').value = '';
   document.getElementById('examDate').value = todayISO();
   ANS_KEYS.forEach(k=>{
@@ -878,6 +978,8 @@ function showDetail(r){
     '<div class="dm-sub">'+esc(r.date)+' / '+esc([r.facility,r.unit].filter(Boolean).join(' ')||'施設未設定')+
     ' / '+esc(r.age?r.age+'歳':'年齢未入力')+' / 検査者: '+esc(r.examiner||'-')+'</div>'+
     '<div class="dm-total'+(r.total<=20?' low':'')+'">合計 '+r.total+' / 30点 ― '+esc(r.judge||'')+'</div>'+
+    '<div class="dm-q"><div class="dm-qt"><span>障害高齢者の日常生活自立度</span><span class="pt">'+esc(r.adlLevel||'-')+'</span></div></div>'+
+    '<div class="dm-q"><div class="dm-qt"><span>認知症高齢者の日常生活自立度</span><span class="pt">'+esc(r.dementiaLevel||'-')+'</span></div></div>'+
     qHtml+
     '<div class="dm-q"><div class="dm-qt"><span>野菜の回答数</span><span class="pt">'+esc(String(r.veg ?? '-'))+'個</span></div></div>'+
     '<div class="dm-q"><div class="dm-qt"><span>単語セット</span><span class="pt">'+(r.words==='B'?'梅・犬・自動車':'桜・猫・電車')+'</span></div></div>'+
@@ -896,14 +998,14 @@ const Q_COLS = [
   ['Q7遅延再生(6)','q7'], ['Q8物品再生(5)','q8'], ['Q9語流暢性(5)','q9']
 ];
 function recordHeader(){
-  const h = ['検査日時','施設','フロア/ユニット','利用者名','年齢','検査者'];
+  const h = ['検査日時','施設','フロア/ユニット','利用者名','年齢','検査者','障害高齢者自立度','認知症高齢者自立度'];
   Q_COLS.forEach(([label], i)=>{ h.push(label); h.push('Q'+(i+1)+'回答'); });
   h.push('野菜回答数','単語セット','合計(30)','判定','メモ');
   return h;
 }
 function recordRow(r){
   const ans = r.answers || [];
-  const row = [r.date, r.facility||'', r.unit||'', r.id, r.age, r.examiner];
+  const row = [r.date, r.facility||'', r.unit||'', r.id, r.age, r.examiner, r.adlLevel||'', r.dementiaLevel||''];
   Q_COLS.forEach(([_, key], i)=>{ row.push(r[key]); row.push(ans[i]||''); });
   row.push(r.veg, r.words==='A'?'桜猫電車':'梅犬自動車', r.total, r.judge, r.memo);
   return row;
